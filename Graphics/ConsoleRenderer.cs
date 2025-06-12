@@ -24,6 +24,7 @@ public class ConsoleRenderer
         Console.Clear();
         Console.SetCursorPosition(0, 0);
         DrawFrame();
+        DrawPerformanceInfo();
     }
 
     public void RenderWithMessage(string message)
@@ -101,6 +102,120 @@ public class ConsoleRenderer
         // Desenha borda inferior
         Console.Write("╚" + new string('═', _board.Columns * 2) + "╝");
         Console.Write("╚" + new string('═', GameConfig.SidePanelWidth - 2) + "╝");
+    }
+
+    private void DrawPerformanceInfo()
+    {
+        // Posiciona o cursor abaixo do jogo para mostrar informações de performance
+        Console.SetCursorPosition(0, _board.Rows + 2);
+        
+        var threadInfo = ThreadMonitor.GetThreadInfo();
+        
+        // Desenha uma linha separadora
+        Console.WriteLine("─" + new string('─', (_board.Columns * 2) + GameConfig.SidePanelWidth + 1));
+        
+        // Linha 1: Título e total de threads em destaque
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write("📊 MONITOR DE PERFORMANCE");
+        Console.ResetColor();
+        Console.Write(" | ");
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.BackgroundColor = ConsoleColor.DarkBlue;
+        Console.Write($" TOTAL THREADS: {threadInfo.TotalThreads} ");
+        Console.ResetColor();
+        Console.Write($" | Memória: ");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.Write($"{threadInfo.MemoryUsageMB} MB");
+        Console.ResetColor();
+        Console.Write($" | CPU: ");
+        Console.ForegroundColor = ConsoleColor.Magenta;
+        Console.Write($"{threadInfo.CpuTime.TotalSeconds:F1}s");
+        Console.ResetColor();
+        Console.WriteLine();
+        
+        // Linha 2: Informações detalhadas de threads
+        Console.Write("🧵 DISTRIBUIÇÃO: ");
+        
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.Write($"🟢 Ativas: {threadInfo.ActiveThreads}");
+        Console.ResetColor();
+        
+        Console.Write(" | ");
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write($"🟡 Executando: {threadInfo.RunningThreads}");
+        Console.ResetColor();
+        
+        Console.Write(" | ");
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.Write($"🔴 Aguardando: {threadInfo.WaitingThreads}");
+        Console.ResetColor();
+        
+        Console.Write(" | ");
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.Write($"⚪ Inativas: {threadInfo.InactiveThreads}");
+        Console.ResetColor();
+        
+        Console.WriteLine();
+        
+        // Linha 3: Barra visual de proporção de threads com total
+        Console.Write($"📈 VISUALIZAÇÃO ({threadInfo.TotalThreads} threads): ");
+        DrawThreadBar(threadInfo);
+        
+        Console.WriteLine();
+    }
+
+    private void DrawThreadBar(ThreadMonitor.ThreadInfo threadInfo)
+    {
+        const int BAR_WIDTH = 30; // Reduzido para dar espaço ao texto adicional
+        
+        Console.Write("[");
+        
+        if (threadInfo.TotalThreads > 0)
+        {
+            int activeBlocks = Math.Max(1, (threadInfo.ActiveThreads * BAR_WIDTH) / threadInfo.TotalThreads);
+            int runningBlocks = Math.Max(0, (threadInfo.RunningThreads * BAR_WIDTH) / threadInfo.TotalThreads);
+            int waitingBlocks = Math.Max(0, (threadInfo.WaitingThreads * BAR_WIDTH) / threadInfo.TotalThreads);
+            int inactiveBlocks = BAR_WIDTH - activeBlocks - waitingBlocks;
+            
+            // Ajusta para não exceder o tamanho da barra
+            if (activeBlocks + waitingBlocks + inactiveBlocks > BAR_WIDTH)
+            {
+                inactiveBlocks = BAR_WIDTH - activeBlocks - waitingBlocks;
+            }
+            
+            // Desenha blocos para threads executando (verde brilhante)
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write(new string('█', runningBlocks));
+            
+            // Desenha blocos para threads ativas mas não executando (verde escuro)
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.Write(new string('█', Math.Max(0, activeBlocks - runningBlocks)));
+            
+            // Desenha blocos para threads aguardando (vermelho)
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(new string('█', waitingBlocks));
+            
+            // Desenha blocos para threads inativas (cinza)
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.Write(new string('█', Math.Max(0, inactiveBlocks)));
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.Write(new string('█', BAR_WIDTH));
+        }
+        
+        Console.ResetColor();
+        Console.Write("]");
+        
+        // Adiciona percentuais e contagem total
+        if (threadInfo.TotalThreads > 0)
+        {
+            double activePercent = (double)threadInfo.ActiveThreads / threadInfo.TotalThreads * 100;
+            double inactivePercent = (double)threadInfo.InactiveThreads / threadInfo.TotalThreads * 100;
+            
+            Console.Write($" {activePercent:F0}%↑ {inactivePercent:F0}%↓");
+        }
     }
 
     private char GetCellChar(int col, int row)
