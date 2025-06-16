@@ -14,6 +14,9 @@ public class GameEngine
     private bool _isPaused;
     private int _frameCount;
     private int _dropInterval;
+    private Thread? _renderThread;
+    private readonly object _gameStateLock = new object();
+    private readonly ManualResetEvent _renderEvent = new ManualResetEvent(false);
 
     public GameEngine()
     {
@@ -31,7 +34,16 @@ public class GameEngine
     {
         _isRunning = true;
         SpawnNewPiece();
+        
+        // Inicia a thread de renderização
+        _renderThread = new Thread(RenderLoop);
+        _renderThread.Start();
+        
+        // Loop principal do jogo
         GameLoop();
+        
+        // Aguarda a thread de renderização terminar
+        _renderThread.Join();
     }
 
     private void GameLoop()
@@ -45,14 +57,8 @@ public class GameEngine
                 Update();
             }
             
-            if (_isPaused)
-            {
-                _renderer.RenderWithMessage("PAUSADO");
-            }
-            else
-            {
-                _renderer.Render();
-            }
+            // Sinaliza para a thread de renderização que pode atualizar
+            _renderEvent.Set();
             
             Thread.Sleep(GameConfig.FrameDelay);
         }
@@ -64,6 +70,30 @@ public class GameEngine
             Console.WriteLine($"Pontuação Final: {_gameState.Score} | Linhas: {_gameState.Lines} | Nível: {_gameState.Level}");
             Console.WriteLine("Pressione qualquer tecla para sair...");
             Console.ReadKey();
+        }
+    }
+
+    private void RenderLoop()
+    {
+        while (_isRunning)
+        {
+            // Aguarda o sinal para renderizar
+            _renderEvent.WaitOne();
+            
+            lock (_gameStateLock)
+            {
+                if (_isPaused)
+                {
+                    _renderer.RenderWithMessage("PAUSADO");
+                }
+                else
+                {
+                    _renderer.Render();
+                }
+            }
+            
+            // Reseta o evento para a próxima renderização
+            _renderEvent.Reset();
         }
     }
 
@@ -128,14 +158,17 @@ public class GameEngine
             _gameState.CurrentPiece.Position.Y + deltaY
         );
 
-        if (_board.CanPlacePiece(_gameState.CurrentPiece, newPosition))
+        lock (_gameStateLock)
         {
-            _gameState.CurrentPiece.Move(deltaX, deltaY);
-            
-            // Dá pontos extras por descida suave
-            if (deltaY > 0)
+            if (_board.CanPlacePiece(_gameState.CurrentPiece, newPosition))
             {
-                _gameState.Score += GameConfig.SoftDropPoints;
+                _gameState.CurrentPiece.Move(deltaX, deltaY);
+                
+                // Dá pontos extras por descida suave
+                if (deltaY > 0)
+                {
+                    _gameState.Score += GameConfig.SoftDropPoints;
+                }
             }
         }
     }
@@ -144,35 +177,38 @@ public class GameEngine
     {
         if (_gameState.CurrentPiece == null) return;
 
-        // Salva o estado atual
-        var originalShape = _gameState.CurrentPiece.Shape;
-        var originalPosition = _gameState.CurrentPiece.Position;
-
-        // Tenta rotacionar
-        _gameState.CurrentPiece.Rotate();
-
-        // Verifica se a rotação é válida
-        if (!_board.CanPlacePiece(_gameState.CurrentPiece, _gameState.CurrentPiece.Position))
+        lock (_gameStateLock)
         {
-            // Tenta ajustes de parede (move a peça se estiver contra uma parede)
-            bool rotationSuccessful = false;
-            int[] kickOffsets = { -1, 1, -2, 2 };
+            // Salva o estado atual
+            var originalShape = _gameState.CurrentPiece.Shape;
+            var originalPosition = _gameState.CurrentPiece.Position;
 
-            foreach (int offset in kickOffsets)
+            // Tenta rotacionar
+            _gameState.CurrentPiece.Rotate();
+
+            // Verifica se a rotação é válida
+            if (!_board.CanPlacePiece(_gameState.CurrentPiece, _gameState.CurrentPiece.Position))
             {
-                var kickPosition = new Point(originalPosition.X + offset, originalPosition.Y);
-                if (_board.CanPlacePiece(_gameState.CurrentPiece, kickPosition))
+                // Tenta ajustes de parede (move a peça se estiver contra uma parede)
+                bool rotationSuccessful = false;
+                int[] kickOffsets = { -1, 1, -2, 2 };
+
+                foreach (int offset in kickOffsets)
                 {
-                    _gameState.CurrentPiece.Move(offset, 0);
-                    rotationSuccessful = true;
-                    break;
+                    var kickPosition = new Point(originalPosition.X + offset, originalPosition.Y);
+                    if (_board.CanPlacePiece(_gameState.CurrentPiece, kickPosition))
+                    {
+                        _gameState.CurrentPiece.Move(offset, 0);
+                        rotationSuccessful = true;
+                        break;
+                    }
                 }
-            }
 
-            // Se a rotação ainda não for válida, reverte
-            if (!rotationSuccessful)
-            {
-                _gameState.CurrentPiece.SetShape(originalShape);
+                // Se a rotação ainda não for válida, reverte
+                if (!rotationSuccessful)
+                {
+                    _gameState.CurrentPiece.SetShape(originalShape);
+                }
             }
         }
     }
@@ -187,11 +223,14 @@ public class GameEngine
             dropDistance++;
         }
 
-        // Concede pontos pela queda rápida
-        _gameState.Score += dropDistance * GameConfig.HardDropPointsPerLine;
-        
-        // Trava a peça imediatamente
-        LockCurrentPiece();
+        lock (_gameStateLock)
+        {
+            // Concede pontos pela queda rápida
+            _gameState.Score += dropDistance * GameConfig.HardDropPointsPerLine;
+            
+            // Trava a peça imediatamente
+            LockCurrentPiece();
+        }
     }
 
     private bool MovePieceDown()
@@ -203,10 +242,13 @@ public class GameEngine
             _gameState.CurrentPiece.Position.Y + 1
         );
 
-        if (_board.CanPlacePiece(_gameState.CurrentPiece, newPosition))
+        lock (_gameStateLock)
         {
-            _gameState.CurrentPiece.Move(0, 1);
-            return true;
+            if (_board.CanPlacePiece(_gameState.CurrentPiece, newPosition))
+            {
+                _gameState.CurrentPiece.Move(0, 1);
+                return true;
+            }
         }
 
         return false;
@@ -216,7 +258,10 @@ public class GameEngine
     {
         if (!MovePieceDown())
         {
-            LockCurrentPiece();
+            lock (_gameStateLock)
+            {
+                LockCurrentPiece();
+            }
         }
     }
 

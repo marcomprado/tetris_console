@@ -138,3 +138,26 @@ Este documento descreve a função de cada arquivo e pasta do projeto Tetris Con
 6. O `GameState` mantém todas as informações dinâmicas do progresso do jogo.
 
 ---
+
+## Modelo de Execução com Duas Threads
+
+A partir da versão atual, o Tetris Console utiliza **duas threads principais** para melhorar a organização e a performance do jogo:
+
+- **Thread Principal (Main/Game Loop):**
+  - Responsável por toda a lógica do jogo, processamento de entradas do usuário, movimentação das peças, pontuação e atualização do estado do jogo.
+  - Após cada atualização de estado, sinaliza para a thread de renderização que pode atualizar a tela.
+
+- **Thread de Renderização:**
+  - Responsável exclusivamente por desenhar o estado atual do jogo no console.
+  - Fica aguardando um sinal da thread principal para realizar a renderização, garantindo que a interface esteja sempre sincronizada com o estado do jogo.
+
+### Sincronização
+- O acesso ao estado do jogo (`GameState`, `Board`, etc.) é protegido por mecanismos de sincronização (locks), garantindo que não haja conflitos ou inconsistências entre as threads.
+- O sinal entre as threads é feito por um evento (ManualResetEvent), que libera a renderização sempre que necessário.
+
+### Benefícios
+- Separação clara entre lógica e interface.
+- Interface mais responsiva e sem travamentos.
+- Estrutura mais próxima de jogos profissionais, facilitando futuras expansões.
+
+---
