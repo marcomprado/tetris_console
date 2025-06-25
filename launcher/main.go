@@ -20,6 +20,19 @@ func main() {
 	fmt.Println("=== Tetris Console Launcher ===")
 	fmt.Println()
 
+	// Verificar se o Git está instalado
+	if !checkGit() {
+		fmt.Println("❌ Git não encontrado!")
+		fmt.Println("📥 Por favor, instale o Git primeiro:")
+		fmt.Println("   Windows: https://git-scm.com/download/win")
+		fmt.Println("   macOS: brew install git")
+		fmt.Println("   Linux: sudo apt-get install git")
+		pause()
+		return
+	} else {
+		fmt.Println("✅ Git encontrado!")
+	}
+
 	// Verificar se o .NET 9 está instalado
 	if !checkDotNet9() {
 		fmt.Println("❌ .NET 9 não encontrado!")
@@ -36,10 +49,14 @@ func main() {
 
 	// Verificar se o repositório já existe
 	repoPath := getRepoPath()
+	fmt.Printf("📁 Caminho do repositório: %s\n", repoPath)
+	
 	if !repoExists(repoPath) {
 		fmt.Println("📥 Baixando o jogo Tetris...")
 		if !cloneRepo(repoPath) {
 			fmt.Println("❌ Falha ao baixar o repositório.")
+			fmt.Println("   Verifique sua conexão com a internet.")
+			fmt.Println("   URL do repositório:", repoURL)
 			pause()
 			return
 		}
@@ -67,6 +84,18 @@ func main() {
 	}
 }
 
+func checkGit() bool {
+	cmd := exec.Command("git", "--version")
+	output, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+	
+	version := strings.TrimSpace(string(output))
+	fmt.Printf("🔍 Git encontrado: %s\n", version)
+	return true
+}
+
 func checkDotNet9() bool {
 	cmd := exec.Command("dotnet", "--version")
 	output, err := cmd.Output()
@@ -75,6 +104,7 @@ func checkDotNet9() bool {
 	}
 
 	version := strings.TrimSpace(string(output))
+	fmt.Printf("🔍 .NET encontrado: %s\n", version)
 	return strings.HasPrefix(version, "9.")
 }
 
@@ -88,12 +118,14 @@ func installDotNet9() bool {
 		cmd = exec.Command("powershell", "-Command", 
 			"Invoke-WebRequest -Uri 'https://download.microsoft.com/download/8/4/c/84c6c430-e0f5-476d-bf57-0c24e0c5e5c8/dotnet-sdk-9.0.100-win-x64.exe' -OutFile 'dotnet-installer.exe'")
 		if err := cmd.Run(); err != nil {
+			fmt.Printf("❌ Erro ao baixar instalador: %v\n", err)
 			return false
 		}
 
 		fmt.Println("🔧 Instalando .NET 9...")
 		cmd = exec.Command("dotnet-installer.exe", "/quiet", "/norestart")
 		if err := cmd.Run(); err != nil {
+			fmt.Printf("❌ Erro ao instalar .NET: %v\n", err)
 			return false
 		}
 
@@ -138,13 +170,21 @@ func cloneRepo(path string) bool {
 	// Criar diretório pai se não existir
 	parentDir := filepath.Dir(path)
 	if err := os.MkdirAll(parentDir, 0755); err != nil {
+		fmt.Printf("❌ Erro ao criar diretório: %v\n", err)
 		return false
 	}
 
+	fmt.Printf("🔍 Clonando repositório para: %s\n", path)
 	cmd := exec.Command("git", "clone", repoURL, path)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run() == nil
+	
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("❌ Erro ao clonar repositório: %v\n", err)
+		return false
+	}
+	
+	return true
 }
 
 func updateRepo(path string) bool {
@@ -159,6 +199,8 @@ func runGame(path string) bool {
 	projectFile := filepath.Join(path, "tetris_so.csproj")
 	if _, err := os.Stat(projectFile); os.IsNotExist(err) {
 		fmt.Printf("❌ Arquivo do projeto não encontrado em: %s\n", projectFile)
+		fmt.Printf("📁 Conteúdo do diretório %s:\n", path)
+		listDirectory(path)
 		return false
 	}
 
@@ -169,6 +211,22 @@ func runGame(path string) bool {
 	cmd.Stdin = os.Stdin
 
 	return cmd.Run() == nil
+}
+
+func listDirectory(path string) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		fmt.Printf("❌ Erro ao listar diretório: %v\n", err)
+		return
+	}
+	
+	for _, entry := range entries {
+		if entry.IsDir() {
+			fmt.Printf("📁 %s/\n", entry.Name())
+		} else {
+			fmt.Printf("📄 %s\n", entry.Name())
+		}
+	}
 }
 
 func pause() {
