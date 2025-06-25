@@ -7,30 +7,30 @@ Um Tetris clássico de console, feito em C# com visual retrô, jogabilidade trad
 ## 📸 Preview
 
 ```
-╔══════════════════════╗╔══════════════════╗
-║                      ║║  PONTOS:      450║
-║                      ║║  LINHAS:        3║
-║                      ║║  NÍVEL:         1║
-║                      ║║                  ║
-║                      ║║   PRÓXIMA PEÇA   ║
-║                      ║║       ■■         ║
-║                      ║║       ■■         ║
-║                      ║║                  ║
-║                      ║║                  ║
-║                      ║║                  ║
-║        ■■■           ║║                  ║
-║         ■            ║║    CONTROLES:    ║
-║                      ║║  ← → / A D: Mover║
-║                      ║║  ↑ / W: Girar    ║
-║■■      ■■■           ║║  ↓ / S: Descer   ║
-║■■■      ■      ■■    ║║  Espaço: Queda   ║
-║■■■■■■■■■■■■■■■■■■    ║║  P: Pausar       ║
-║■■■■■■■■■■■■■■■■■■■■  ║║  ESC/Q: Sair     ║
-║■■■■■■■■■■■■■■■■■■■■■ ║║                  ║
-║■■■■■■■■■■■■■■■■■■■■■■║║                  ║
-╚══════════════════════╝╚══════════════════╝
++------------------------------++------------------+
+|                              ||  PONTOS:      450 |
+|                              ||  LINHAS:        3 |
+|                              ||  NIVEL:         1 |
+|                              ||                  |
+|                              ||   PROXIMA PECA   |
+|                              ||        [][]        |
+|                              ||        [][]        |
+|                              ||                  |
+|                              ||                  |
+|                              ||                  |
+|                              ||                  |
+|        [][][]                ||    CONTROLES:    |
+|         []                   ||<- -> / A D: Mover|
+|                              ||  ^ / W: Girar    |
+|[][]    [][][]               ||  v / S: Descer   |
+|[][][]    []      [][]       ||  Espaco: Queda   |
+|[][][][][][][][][][][]       ||  P: Pausar       |
+|[][][][][][][][][][][][]     ||  ESC/Q: Sair     |
+|[][][][][][][][][][][][][]   ||                  |
+|[][][][][][][][][][][][][][] ||                  |
++------------------------------++------------------+
 ```
-*Exemplo de tela do jogo rodando no terminal.*
+*Exemplo de tela do jogo rodando no terminal com blocos ASCII.*
 
 ---
 
@@ -38,7 +38,7 @@ Um Tetris clássico de console, feito em C# com visual retrô, jogabilidade trad
 
 **Pré-requisitos:**  
 - [.NET 9.0+](https://dotnet.microsoft.com/download/dotnet/9.0)
-- Terminal com suporte a Unicode
+- Terminal compatível (Windows, macOS, Linux)
 
 ```bash
 git clone https://github.com/marcomprado/tetris-console.git
@@ -69,6 +69,26 @@ dotnet run
 - Rotação com wall-kick
 - Pausa e interface em português
 - Visual minimalista e retrô
+- **Compatibilidade universal** (Windows, macOS, Linux)
+
+---
+
+## 🔧 Melhorias da Branch ASC2
+
+### ✅ Compatibilidade Universal
+- **Blocos ASCII**: Substituição de caracteres Unicode por `[]` simples
+- **Sem piscamento**: Eliminação de problemas de renderização no Windows
+- **Performance otimizada**: Renderização mais rápida e estável
+
+### ✅ Refatoração de Código
+- **Código mais limpo**: Eliminação de múltiplos `if/else if` verbosos
+- **Melhor organização**: Separação da lógica de renderização do painel lateral
+- **Manutenibilidade**: Estrutura mais modular e fácil de manter
+
+### ✅ Layout Corrigido
+- **Painel lateral**: Texto dos controles ajustado para caber na largura
+- **Centralização**: Preview de peças centralizado corretamente
+- **Interface consistente**: Visual uniforme em todas as plataformas
 
 ---
 
@@ -105,7 +125,7 @@ Edite `Models/GameConfig.cs` para:
 
 ## 🐛 Problemas Conhecidos
 
-- Alguns terminais podem não exibir Unicode corretamente
+- ~~Alguns terminais podem não exibir Unicode corretamente~~ ✅ **Resolvido na branch ASC2**
 - Requer terminal com pelo menos 24 linhas
 
 ---
