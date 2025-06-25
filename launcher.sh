@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 
 # Configurações
 REPO_URL="https://github.com/marcomprado/tetris_console.git"
-PROJECT_DIR="tetris-console"
+PROJECT_DIR="tetris_console"
 MIN_DOTNET_VERSION="9.0"
 
 echo -e "${BLUE}🎮 Tetris Console Launcher${NC}"
@@ -55,7 +55,7 @@ setup_project() {
     if [ -d "$PROJECT_DIR" ]; then
         echo -e "${YELLOW}📁 Projeto já existe. Atualizando...${NC}"
         cd "$PROJECT_DIR"
-        git pull origin main
+        git pull origin main || git pull origin master
         cd ..
     else
         echo -e "${YELLOW}📥 Clonando repositório...${NC}"

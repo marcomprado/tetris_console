@@ -93,4 +93,8 @@ ServiceFabricBackup/
 # Windows
 Thumbs.db
 ehthumbs.db
-Desktop.ini 
+Desktop.ini
+
+# Tetris Console launcher generated files
+tetris-console/
+tetris_console/ 

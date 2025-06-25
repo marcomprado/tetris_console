@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 const (
@@ -47,6 +49,7 @@ func main() {
 	}
 
 	// Baixar o arquivo
+	fmt.Printf("🔗 Tentando baixar de: %s\n", downloadURL)
 	err = downloadFile(downloadURL, launcherPath)
 	if err != nil {
 		fmt.Printf("❌ Erro ao baixar launcher: %v\n", err)
@@ -72,7 +75,7 @@ func main() {
 	if osType == "windows" {
 		cmd = exec.Command("cmd", "/c", launcherPath)
 	} else {
-		cmd = exec.Command("/bin/bash", launcherPath)
+		cmd = exec.Command("sh", launcherPath)
 	}
 
 	cmd.Stdout = os.Stdout
@@ -87,22 +90,45 @@ func main() {
 }
 
 func downloadFile(url, filepath string) error {
-	resp, err := http.Get(url)
+	// Criar contexto com timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Criar requisição com contexto
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("erro ao criar requisição: %v", err)
+	}
+
+	// Configurar User-Agent para evitar bloqueios
+	req.Header.Set("User-Agent", "Tetris-Launcher/1.0")
+
+	fmt.Printf("📡 Fazendo requisição HTTP para: %s\n", url)
+	
+	// Fazer a requisição
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("erro na requisição HTTP: %v", err)
 	}
 	defer resp.Body.Close()
 
+	fmt.Printf("📊 Status code: %d\n", resp.StatusCode)
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("erro HTTP: %d", resp.StatusCode)
+		return fmt.Errorf("erro HTTP: %d - %s", resp.StatusCode, resp.Status)
 	}
 
 	out, err := os.Create(filepath)
 	if err != nil {
-		return err
+		return fmt.Errorf("erro ao criar arquivo: %v", err)
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, resp.Body)
-	return err
+	bytesWritten, err := io.Copy(out, resp.Body)
+	if err != nil {
+		return fmt.Errorf("erro ao copiar dados: %v", err)
+	}
+	
+	fmt.Printf("✅ Download concluído: %d bytes\n", bytesWritten)
+	return nil
 } 

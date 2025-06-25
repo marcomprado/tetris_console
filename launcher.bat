@@ -11,7 +11,7 @@ echo.
 
 REM Configurações
 set REPO_URL=https://github.com/marcomprado/tetris_console.git
-set PROJECT_DIR=tetris-console
+set PROJECT_DIR=tetris_console
 
 REM Verificar se o .NET está instalado
 echo 🔍 Verificando dependências...
@@ -55,6 +55,9 @@ if exist "%PROJECT_DIR%" (
     echo 📁 Projeto já existe. Atualizando...
     cd "%PROJECT_DIR%"
     git pull origin main
+    if %errorlevel% neq 0 (
+        git pull origin master
+    )
     cd ..
 ) else (
     echo 📥 Clonando repositório...
