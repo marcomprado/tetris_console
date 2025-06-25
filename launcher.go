@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	launcherURL = "https://raw.githubusercontent.com/marcomprado/tetris-console/main/launcher.sh"
-	launcherBatURL = "https://raw.githubusercontent.com/marcomprado/tetris-console/main/launcher.bat"
+	launcherURL = "https://raw.githubusercontent.com/marcomprado/tetris_console/main/launcher.sh"
+	launcherBatURL = "https://raw.githubusercontent.com/marcomprado/tetris_console/main/launcher.bat"
 )
 
 func main() {

@@ -2,6 +2,48 @@
 
 Executável único que baixa e executa o Tetris Console automaticamente!
 
+## 🚀 Launcher Multiplataforma
+
+Agora você pode baixar e executar o Tetris Console com apenas um clique!
+
+### 📥 Downloads
+
+- **Windows 64-bit**: tetris-launcher.exe
+- **Windows 32-bit**: tetris-launcher-32.exe  
+- **macOS Intel**: tetris-launcher-mac
+- **macOS M1/M2**: tetris-launcher-mac-m1
+- **Linux 64-bit**: tetris-launcher-linux
+- **Linux 32-bit**: tetris-launcher-linux-32
+- **Linux ARM64**: tetris-launcher-linux-arm64
+
+### 🎯 Como usar
+
+1. Baixe o arquivo para sua plataforma
+2. Execute o arquivo
+3. O launcher baixará e executará o Tetris automaticamente!
+
+### 📋 Pré-requisitos
+
+- .NET 9.0+ instalado
+- Git instalado
+
+Mais detalhes em [EXECUTABLE_README.md](./EXECUTABLE_README.md)
+
+## 🚀 Baixe e Rode com 1 Clique!
+
+Agora você pode baixar o executável para sua plataforma e rodar o Tetris Console automaticamente:
+
+- [Windows 64-bit](https://github.com/marcomprado/tetris-console/releases/latest/download/tetris-launcher.exe)
+- [macOS Intel](https://github.com/marcomprado/tetris-console/releases/latest/download/tetris-launcher-mac)
+- [macOS M1/M2](https://github.com/marcomprado/tetris-console/releases/latest/download/tetris-launcher-mac-m1)
+- [Linux 64-bit](https://github.com/marcomprado/tetris-console/releases/latest/download/tetris-launcher-linux)
+- [Linux ARM64](https://github.com/marcomprado/tetris-console/releases/latest/download/tetris-launcher-linux-arm64)
+
+**Como usar:**  
+Baixe, dê permissão de execução (no macOS/Linux: `chmod +x nome-do-arquivo`), e execute!
+
+Mais detalhes em [EXECUTABLE_README.md](./EXECUTABLE_README.md)
+
 ## 📥 Download
 
 Baixe o executável para sua plataforma:

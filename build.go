@@ -41,7 +41,7 @@ func main() {
 		
 		cmd := exec.Command("go", "build", 
 			"-o", outputPath,
-			"-ldflags", "-s -w", // Reduzir tamanho do executável
+			"-ldflags", "-s -w -H windowsgui", // Reduzir tamanho e otimizar
 			"launcher.go")
 		
 		cmd.Env = append(os.Environ(),
