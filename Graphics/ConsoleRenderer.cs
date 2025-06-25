@@ -7,8 +7,8 @@ public class ConsoleRenderer
 {
     private readonly Board _board;
     private readonly GameState _gameState;
-    private const char EMPTY_CHAR = ' ';
-    private const char BLOCK_CHAR = '■';
+    private const string EMPTY_STRING = "  ";
+    private const string BLOCK_STRING = "[]";
 
     public ConsoleRenderer(Board board, GameState gameState)
     {
@@ -49,59 +49,29 @@ public class ConsoleRenderer
     private void DrawFrame()
     {
         // Desenha borda superior
-        Console.Write("╔" + new string('═', _board.Columns * 2) + "╗");
-        Console.WriteLine("╔" + new string('═', GameConfig.SidePanelWidth - 2) + "╗");
+        Console.Write("+" + new string('-', _board.Columns * 2) + "+");
+        Console.WriteLine("+" + new string('-', GameConfig.SidePanelWidth - 2) + "+");
 
         // Desenha o tabuleiro e painel lateral
         for (int row = 0; row < _board.Rows; row++)
         {
             // Desenha linha do tabuleiro
-            Console.Write("║");
+            Console.Write("|");
             for (int col = 0; col < _board.Columns; col++)
             {
-                char blockChar = GetCellChar(col, row);
-                Console.Write(blockChar + " ");
+                string blockString = GetCellString(col, row);
+                Console.Write(blockString);
             }
-            Console.Write("║");
+            Console.Write("|");
             
             // Desenha linha do painel lateral
-            if (row == 0)
-                Console.Write("║  PONTOS:" + _gameState.Score.ToString().PadLeft(8) + " ║");
-            else if (row == 1)
-                Console.Write("║  LINHAS:" + _gameState.Lines.ToString().PadLeft(8) + " ║");
-            else if (row == 2)
-                Console.Write("║  NÍVEL: " + _gameState.Level.ToString().PadLeft(8) + " ║");
-            else if (row == 4)
-                Console.Write("║   PRÓXIMA PEÇA   ║");
-            else if (row >= 5 && row < 5 + GameConfig.NextPiecePreviewSize && _gameState.NextPiece != null)
-            {
-                Console.Write("║     ");
-                DrawNextPiecePreview(row - 5);
-                Console.Write("     ║");
-            }
-            else if (row == 12)
-                Console.Write("║    CONTROLES:    ║");
-            else if (row == 13)
-                Console.Write("║  ← → / A D: Mover║");
-            else if (row == 14)
-                Console.Write("║  ↑ / W: Girar    ║");
-            else if (row == 15)
-                Console.Write("║  ↓ / S: Descer   ║");
-            else if (row == 16)
-                Console.Write("║  Espaço: Queda   ║");
-            else if (row == 17)
-                Console.Write("║  P: Pausar       ║");
-            else if (row == 18)
-                Console.Write("║  ESC/Q: Sair     ║");
-            else
-                Console.Write("║" + new string(' ', GameConfig.SidePanelWidth - 2) + "║");
-            
+            Console.Write(GetSidePanelText(row));
             Console.WriteLine();
         }
 
         // Desenha borda inferior
-        Console.Write("╚" + new string('═', _board.Columns * 2) + "╝");
-        Console.Write("╚" + new string('═', GameConfig.SidePanelWidth - 2) + "╝");
+        Console.Write("+" + new string('-', _board.Columns * 2) + "+");
+        Console.Write("+" + new string('-', GameConfig.SidePanelWidth - 2) + "+");
     }
 
     private void DrawPerformanceInfo()
@@ -112,18 +82,18 @@ public class ConsoleRenderer
         var threadInfo = ThreadMonitor.GetThreadInfo();
         
         // Desenha uma linha separadora
-        Console.WriteLine("─" + new string('─', (_board.Columns * 2) + GameConfig.SidePanelWidth + 1));
+        Console.WriteLine("-" + new string('-', (_board.Columns * 2) + GameConfig.SidePanelWidth + 1));
         
         // Linha 1: Título e total de threads em destaque
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write("📊 MONITOR DE PERFORMANCE");
+        Console.Write("MONITOR DE PERFORMANCE");
         Console.ResetColor();
         Console.Write(" | ");
         Console.ForegroundColor = ConsoleColor.White;
         Console.BackgroundColor = ConsoleColor.DarkBlue;
         Console.Write($" TOTAL THREADS: {threadInfo.TotalThreads} ");
         Console.ResetColor();
-        Console.Write($" | Memória: ");
+        Console.Write($" | Memoria: ");
         Console.ForegroundColor = ConsoleColor.Green;
         Console.Write($"{threadInfo.MemoryUsageMB} MB");
         Console.ResetColor();
@@ -134,31 +104,31 @@ public class ConsoleRenderer
         Console.WriteLine();
         
         // Linha 2: Informações detalhadas de threads
-        Console.Write("🧵 DISTRIBUIÇÃO: ");
+        Console.Write("DISTRIBUICAO: ");
         
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write($"🟢 Ativas: {threadInfo.ActiveThreads}");
+        Console.Write($"Ativas: {threadInfo.ActiveThreads}");
         Console.ResetColor();
         
         Console.Write(" | ");
         Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write($"🟡 Executando: {threadInfo.RunningThreads}");
+        Console.Write($"Executando: {threadInfo.RunningThreads}");
         Console.ResetColor();
         
         Console.Write(" | ");
         Console.ForegroundColor = ConsoleColor.Red;
-        Console.Write($"🔴 Aguardando: {threadInfo.WaitingThreads}");
+        Console.Write($"Aguardando: {threadInfo.WaitingThreads}");
         Console.ResetColor();
         
         Console.Write(" | ");
         Console.ForegroundColor = ConsoleColor.Gray;
-        Console.Write($"⚪ Inativas: {threadInfo.InactiveThreads}");
+        Console.Write($"Inativas: {threadInfo.InactiveThreads}");
         Console.ResetColor();
         
         Console.WriteLine();
         
         // Linha 3: Barra visual de proporção de threads com total
-        Console.Write($"📈 VISUALIZAÇÃO ({threadInfo.TotalThreads} threads): ");
+        Console.Write($"VISUALIZACAO ({threadInfo.TotalThreads} threads): ");
         DrawThreadBar(threadInfo);
         
         Console.WriteLine();
@@ -185,24 +155,24 @@ public class ConsoleRenderer
             
             // Desenha blocos para threads executando (verde brilhante)
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write(new string('█', runningBlocks));
+            Console.Write(new string('#', runningBlocks));
             
             // Desenha blocos para threads ativas mas não executando (verde escuro)
             Console.ForegroundColor = ConsoleColor.DarkGreen;
-            Console.Write(new string('█', Math.Max(0, activeBlocks - runningBlocks)));
+            Console.Write(new string('#', Math.Max(0, activeBlocks - runningBlocks)));
             
             // Desenha blocos para threads aguardando (vermelho)
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(new string('█', waitingBlocks));
+            Console.Write(new string('#', waitingBlocks));
             
             // Desenha blocos para threads inativas (cinza)
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.Write(new string('█', Math.Max(0, inactiveBlocks)));
+            Console.Write(new string('#', Math.Max(0, inactiveBlocks)));
         }
         else
         {
             Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.Write(new string('█', BAR_WIDTH));
+            Console.Write(new string('#', BAR_WIDTH));
         }
         
         Console.ResetColor();
@@ -214,11 +184,11 @@ public class ConsoleRenderer
             double activePercent = (double)threadInfo.ActiveThreads / threadInfo.TotalThreads * 100;
             double inactivePercent = (double)threadInfo.InactiveThreads / threadInfo.TotalThreads * 100;
             
-            Console.Write($" {activePercent:F0}%↑ {inactivePercent:F0}%↓");
+            Console.Write($" {activePercent:F0}%^ {inactivePercent:F0}%v");
         }
     }
 
-    private char GetCellChar(int col, int row)
+    private string GetCellString(int col, int row)
     {
         // Primeiro verifica se a peça atual ocupa esta célula
         if (_gameState.CurrentPiece != null)
@@ -231,23 +201,54 @@ public class ConsoleRenderer
                 pieceCol >= 0 && pieceCol < piece.Shape.GetLength(1) &&
                 piece.Shape[pieceRow, pieceCol] != 0)
             {
-                return BLOCK_CHAR;
+                return BLOCK_STRING;
             }
         }
 
         // Caso contrário, obtém a célula do tabuleiro
         int cell = _board.GetCell(new Point(col, row));
-        return cell != 0 ? BLOCK_CHAR : EMPTY_CHAR;
+        return cell != 0 ? BLOCK_STRING : EMPTY_STRING;
     }
 
-    private void DrawNextPiecePreview(int row)
+    private string GetSidePanelText(int row)
     {
-        const int PREVIEW_WIDTH = 8; // Largura total da área de preview
+        if (row == 0)
+            return "|  PONTOS:" + _gameState.Score.ToString().PadLeft(8) + " |";
+        else if (row == 1)
+            return "|  LINHAS:" + _gameState.Lines.ToString().PadLeft(8) + " |";
+        else if (row == 2)
+            return "|  NIVEL: " + _gameState.Level.ToString().PadLeft(8) + " |";
+        else if (row == 4)
+            return "|   PROXIMA PECA   |";
+        else if (row >= 5 && row < 5 + GameConfig.NextPiecePreviewSize && _gameState.NextPiece != null)
+        {
+            return "|     " + DrawNextPiecePreview(row - 5) + "     |";
+        }
+        else if (row == 12)
+            return "|    CONTROLES:    |";
+        else if (row == 13)
+            return "|<- -> / A D: Mover|";
+        else if (row == 14)
+            return "|  ^ / W: Girar    |";
+        else if (row == 15)
+            return "|  v / S: Descer   |";
+        else if (row == 16)
+            return "|  Espaco: Queda   |";
+        else if (row == 17)
+            return "|  P: Pausar       |";
+        else if (row == 18)
+            return "|  ESC/Q: Sair     |";
+        else
+            return "|" + new string(' ', GameConfig.SidePanelWidth - 2) + "|";
+    }
+
+    private string DrawNextPiecePreview(int row)
+    {
+        const int PREVIEW_WIDTH = 8; // 4 blocos * 2 chars
         
         if (_gameState.NextPiece == null || row >= _gameState.NextPiece.Shape.GetLength(0))
         {
-            Console.Write(new string(' ', PREVIEW_WIDTH));
-            return;
+            return new string(' ', PREVIEW_WIDTH);
         }
 
         // Calcula a largura real da peça nesta linha
@@ -267,25 +268,20 @@ public class ConsoleRenderer
         if (firstBlock == -1)
         {
             // Linha vazia
-            Console.Write(new string(' ', PREVIEW_WIDTH));
-            return;
+            return new string(' ', PREVIEW_WIDTH);
         }
         
-        pieceWidth = lastBlock - firstBlock + 1;
+        pieceWidth = (lastBlock - firstBlock + 1) * 2; // 2 caracteres por bloco
         int leftPadding = (PREVIEW_WIDTH - pieceWidth) / 2;
         
-        // Desenha com centralização adequada
-        Console.Write(new string(' ', leftPadding));
-        
+        // Constrói a string da peça
+        string pieceString = "";
         for (int col = firstBlock; col <= lastBlock; col++)
         {
-            char blockChar = _gameState.NextPiece.Shape[row, col] > 0 
-                ? BLOCK_CHAR 
-                : EMPTY_CHAR;
-            Console.Write(blockChar);
+            pieceString += _gameState.NextPiece.Shape[row, col] > 0 ? BLOCK_STRING : EMPTY_STRING;
         }
         
         int rightPadding = PREVIEW_WIDTH - leftPadding - pieceWidth;
-        Console.Write(new string(' ', rightPadding));
+        return new string(' ', leftPadding) + pieceString + new string(' ', rightPadding);
     }
 } 
